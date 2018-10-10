@@ -121,8 +121,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="bmpfuncs.c" />
-    <ClCompile Include="simple_conv.c" />
+    <ClCompile Include="bmpfuncs.cpp" />
+    <ClCompile Include="simple_conv.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmpfuncs.h" />

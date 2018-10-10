@@ -1,2 +1,5 @@
-﻿  simple_conv.c
+﻿  simple_conv.cpp
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(71): warning C4018: '<': signed/unsigned mismatch
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(79): warning C4018: '<': signed/unsigned mismatch
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(34): warning C4101: 'name_data': unreferenced local variable
   Part 1.vcxproj -> C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 1\Debug\Part 1.exe

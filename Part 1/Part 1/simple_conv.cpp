@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "bmpfuncs.h"
+#include <iostream>
+using namespace std;
 
 #ifdef MAC
 #include <OpenCL/cl.h>
@@ -19,28 +21,31 @@
 /* Find a GPU or CPU associated with the first available platform */
 cl_device_id create_device() {
 
-   cl_platform_id platform;
+   cl_platform_id *platforms;
    cl_device_id dev;
+   cl_device_id *devices;
    int err;
-   cl_uint platformCount;
+   cl_uint platformCount, deviceCount;
+   char* value;
+   size_t valueSize;
+   cl_uint maxComputeUnits;
 	
 
    char name_data[48];
    /* Identify a platform */
-   err = clGetPlatformIDs(1, &platform, NULL);
-   if(err < 0) {
-      perror("Couldn't identify a platform");
-      exit(1);
-   }
 
    clGetPlatformIDs(0, NULL, &platformCount);
-
-   printf("Platform count: %d\n", platformCount);
+   platforms = (cl_platform_id*)malloc(sizeof(cl_platform_id) * platformCount);
+   err = clGetPlatformIDs(platformCount, platforms, NULL);
+   if (err < 0) {
+	   perror("Couldn't identify a platform");
+	   exit(1);
+   }
 
    /* Access a device */
-   err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &dev, NULL);
+   err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 1, &dev, NULL);
    if(err == CL_DEVICE_NOT_FOUND) {
-      err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &dev, NULL);
+      err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_CPU, 1, &dev, NULL);
    }
    if(err < 0) {
       perror("Couldn't access any devices");
@@ -48,7 +53,9 @@ cl_device_id create_device() {
    }
 
 
-   /* Access device name */
+
+   /*
+   /* Access device name *
    err = clGetDeviceInfo(dev, CL_DEVICE_NAME,
 	   48 * sizeof(char), name_data, NULL);
    if (err < 0) {
@@ -57,7 +64,48 @@ cl_device_id create_device() {
    }
 
    printf("NAME: %s\n",
-	   name_data);
+	   name_data);*/
+
+
+
+   for (int i = 0; i < platformCount; i++) {
+
+	   // get all devices
+	   clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
+	   devices = (cl_device_id*)malloc(sizeof(cl_device_id) * deviceCount);
+	   clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
+
+	   // for each device print critical attributes
+	   for (int j = 0; j < deviceCount; j++) {
+
+		   // print device name
+		   clGetDeviceInfo(devices[j], CL_DEVICE_NAME, 0, NULL, &valueSize);
+		   value = (char*)malloc(valueSize);
+		   clGetDeviceInfo(devices[j], CL_DEVICE_NAME, valueSize, value, NULL);
+		   printf("%d.%d Device: %s\n", i +1, j + 1, value);
+		   free(value);
+
+		   // print parallel compute units
+		   clGetDeviceInfo(devices[j], CL_DEVICE_MAX_COMPUTE_UNITS,
+			   sizeof(maxComputeUnits), &maxComputeUnits, NULL);
+		   printf(" Parallel compute units: %d\n", maxComputeUnits);
+
+		   cout << endl;
+	   }
+
+	   free(devices);
+
+   }
+   int platnum, devnum;
+   cout << "Please enter device number (e.g. 1.1): ";
+   cin >> platnum;
+   getchar();
+   cin >> devnum;
+   cin.ignore(100, '\n');
+
+   cout << platnum << '.' << devnum << endl;
+
+   free(platforms);
 
 
    return dev;
