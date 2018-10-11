@@ -19,14 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bmpfuncs.c" />
-    <ClCompile Include="gradient.c" />
+    <ClCompile Include="bmpfuncs.cpp" />
+    <ClCompile Include="simple_RGB_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmpfuncs.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="gradient.cl" />
+    <None Include="simple_image.cl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

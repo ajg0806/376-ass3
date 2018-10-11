@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bmpfuncs.c">
+    <ClCompile Include="simple_RGB_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="gradient.c">
+    <ClCompile Include="bmpfuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -28,7 +28,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="gradient.cl">
+    <None Include="simple_image.cl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

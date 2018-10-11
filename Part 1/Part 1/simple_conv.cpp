@@ -3,7 +3,8 @@
 #define KERNEL_FUNC "simple_conv"
 
 #define INPUT_FILE "lena.bmp"
-#define OUTPUT_FILE "output.bmp"
+#define OUTPUT_FILE_1 "output_naive.bmp"
+#define OUTPUT_FILE_2 "output_smart.bmp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -204,19 +205,26 @@ int main(int argc, char **argv) {
 
    /* Image data */
    unsigned char* inputImage;
-   unsigned char* outputImage;
+   unsigned char* outputImage1;
+   unsigned char* outputImage2;
 
    cl_image_format img_format;
-   cl_mem input_image, output_image;
+   cl_mem input_image, output_image1, output_image2, buffer_dim;
    size_t origin[3], region[3];
    size_t width, height;
    int w, h;
+   int dimension;
+
+   cout << "Please enter 3, 5 or 7: ";
+   cin >> dimension;
+   cin.ignore(100, '\n');
 
    /* Open input file and read image data */
    inputImage = readRGBImage(INPUT_FILE, &w, &h);
    width = w;
    height = h;
-   outputImage = (unsigned char*)malloc(sizeof(unsigned char)*w*h*4);
+   outputImage1 = (unsigned char*)malloc(sizeof(unsigned char)*w*h*4);
+   outputImage2 = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
 
    /* Create a device and context */
    device = create_device();
@@ -244,16 +252,20 @@ int main(int argc, char **argv) {
    input_image = clCreateImage2D(context, 
          CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 
          &img_format, width, height, 0, (void*)inputImage, &err);
-   output_image = clCreateImage2D(context, 
+   output_image1 = clCreateImage2D(context, 
          CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+   output_image2 = clCreateImage2D(context,
+	   CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
    if(err < 0) {
       perror("Couldn't create the image object");
       exit(1);
-   }; 
+   };
 
    /* Create kernel arguments */
    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_image);
-   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_image);
+   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_image1);
+   err |= clSetKernelArg(kernel, 2, sizeof(cl_int), &dimension);
+   err |= clSetKernelArg(kernel, 3, sizeof(cl_int), &output_image2);
    if(err < 0) {
       printf("Couldn't set a kernel argument");
       exit(1);   
@@ -278,24 +290,29 @@ int main(int argc, char **argv) {
    /* Read the image object */
    origin[0] = 0; origin[1] = 0; origin[2] = 0;
    region[0] = width; region[1] = height; region[2] = 1;
-   err = clEnqueueReadImage(queue, output_image, CL_TRUE, origin, 
-         region, 0, 0, (void*)outputImage, 0, NULL, NULL);
+   err = clEnqueueReadImage(queue, output_image1, CL_TRUE, origin, 
+         region, 0, 0, (void*)outputImage1, 0, NULL, NULL);
+   err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
+	   region, 0, 0, (void*)outputImage2, 0, NULL, NULL);
    if(err < 0) {
       perror("Couldn't read from the image object");
       exit(1);   
    }
 
    /* Create output BMP file and write data */
-   storeRGBImage(outputImage, OUTPUT_FILE, h, w, INPUT_FILE);
+   storeRGBImage(outputImage1, OUTPUT_FILE_1, h, w, INPUT_FILE);
+   storeRGBImage(outputImage2, OUTPUT_FILE_2, h, w, INPUT_FILE);
 
    printf("Done.");
    getchar();
 
    /* Deallocate resources */
    free(inputImage);
-   free(outputImage);
+   free(outputImage1);
+   free(outputImage2);
    clReleaseMemObject(input_image);
-   clReleaseMemObject(output_image);
+   clReleaseMemObject(output_image1);
+   clReleaseMemObject(output_image2);
    clReleaseKernel(kernel);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
