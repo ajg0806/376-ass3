@@ -22,7 +22,7 @@ using namespace std;
 cl_device_id create_device() {
 
    cl_platform_id *platforms;
-   cl_device_id dev;
+   cl_device_id dev, dev2;
    cl_device_id *devices;
    int err;
    cl_uint platformCount, deviceCount;
@@ -41,32 +41,6 @@ cl_device_id create_device() {
 	   perror("Couldn't identify a platform");
 	   exit(1);
    }
-
-   /* Access a device */
-   err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_GPU, 1, &dev, NULL);
-   if(err == CL_DEVICE_NOT_FOUND) {
-      err = clGetDeviceIDs(platforms[0], CL_DEVICE_TYPE_CPU, 1, &dev, NULL);
-   }
-   if(err < 0) {
-      perror("Couldn't access any devices");
-      exit(1);   
-   }
-
-
-
-   /*
-   /* Access device name *
-   err = clGetDeviceInfo(dev, CL_DEVICE_NAME,
-	   48 * sizeof(char), name_data, NULL);
-   if (err < 0) {
-	   perror("Couldn't read extension data");
-	   exit(1);
-   }
-
-   printf("NAME: %s\n",
-	   name_data);*/
-
-
 
    for (int i = 0; i < platformCount; i++) {
 
@@ -103,10 +77,28 @@ cl_device_id create_device() {
    cin >> devnum;
    cin.ignore(100, '\n');
 
-   cout << platnum << '.' << devnum << endl;
+   platnum--;
+   devnum--;
 
+
+   clGetDeviceIDs(platforms[platnum], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
+   devices = (cl_device_id*)malloc(sizeof(cl_device_id) * deviceCount);
+   clGetDeviceIDs(platforms[platnum], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
+   dev = devices[devnum];
+
+   free(devices);
    free(platforms);
 
+   /* Access device name */
+   err = clGetDeviceInfo(dev, CL_DEVICE_NAME,
+	   48 * sizeof(char), name_data, NULL);
+   if (err < 0) {
+	   perror("Couldn't read extension data");
+	   exit(1);
+   }
+
+   printf("\n%d.%d NAME: %s\n\n",
+	   platnum+1, devnum+1, name_data);
 
    return dev;
 }
