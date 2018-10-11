@@ -18,6 +18,31 @@ using namespace std;
 #include <CL/cl.h>
 #endif
 
+cl_device_id default_device() {
+	cl_platform_id platform;
+	cl_device_id dev;
+	int err;
+
+	/* Identify a platform */
+	err = clGetPlatformIDs(1, &platform, NULL);
+	if (err < 0) {
+		perror("Couldn't identify a platform");
+		exit(1);
+	}
+
+	/* Access a device */
+	err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &dev, NULL);
+	if (err == CL_DEVICE_NOT_FOUND) {
+		err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &dev, NULL);
+	}
+	if (err < 0) {
+		perror("Couldn't access any devices");
+		exit(1);
+	}
+
+	return dev;
+}
+
 /* Find a GPU or CPU associated with the first available platform */
 cl_device_id create_device() {
 
@@ -30,10 +55,6 @@ cl_device_id create_device() {
    size_t valueSize;
    cl_uint maxComputeUnits;
 	
-
-   char name_data[48];
-   /* Identify a platform */
-
    clGetPlatformIDs(0, NULL, &platformCount);
    platforms = (cl_platform_id*)malloc(sizeof(cl_platform_id) * platformCount);
    err = clGetPlatformIDs(platformCount, platforms, NULL);
@@ -80,25 +101,25 @@ cl_device_id create_device() {
    platnum--;
    devnum--;
 
+   if (platnum+1 > platformCount) {
+	   free(platforms);
+	   return default_device();
+   }
 
    clGetDeviceIDs(platforms[platnum], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
    devices = (cl_device_id*)malloc(sizeof(cl_device_id) * deviceCount);
    clGetDeviceIDs(platforms[platnum], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
+   
+   if (devnum+1 > deviceCount) {
+	   free(platforms);
+	   free(devices);
+	   return default_device();
+   }
+   
    dev = devices[devnum];
 
    free(devices);
    free(platforms);
-
-   /* Access device name */
-   err = clGetDeviceInfo(dev, CL_DEVICE_NAME,
-	   48 * sizeof(char), name_data, NULL);
-   if (err < 0) {
-	   perror("Couldn't read extension data");
-	   exit(1);
-   }
-
-   printf("\n%d.%d NAME: %s\n\n",
-	   platnum+1, devnum+1, name_data);
 
    return dev;
 }
@@ -155,6 +176,21 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
    return program;
 }
 
+void print_device(cl_device_id device) {
+	char name_data[48];
+	int err;
+	/* Access device name */
+	err = clGetDeviceInfo(device, CL_DEVICE_NAME,
+		48 * sizeof(char), name_data, NULL);
+	if (err < 0) {
+		perror("Couldn't read extension data");
+		exit(1);
+	}
+
+	printf("\nNAME: %s\n\n",
+		name_data);
+}
+
 int main(int argc, char **argv) {
 
    /* Host/device data structures */
@@ -184,6 +220,9 @@ int main(int argc, char **argv) {
 
    /* Create a device and context */
    device = create_device();
+
+   print_device(device);
+
    context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
    if(err < 0) {
       perror("Couldn't create a context");
