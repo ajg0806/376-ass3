@@ -1,8 +1,9 @@
 ﻿  simple_conv.cpp
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(67): warning C4018: '<': signed/unsigned mismatch
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(75): warning C4018: '<': signed/unsigned mismatch
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(105): warning C4018: '>': signed/unsigned mismatch
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(114): warning C4018: '>': signed/unsigned mismatch
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(51): warning C4101: 'dev2': unreferenced local variable
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(212): warning C4101: 'buffer_dim': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(68): warning C4018: '<': signed/unsigned mismatch
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(76): warning C4018: '<': signed/unsigned mismatch
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(106): warning C4018: '>': signed/unsigned mismatch
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(115): warning C4018: '>': signed/unsigned mismatch
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(52): warning C4101: 'dev2': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(213): warning C4101: 'buffer_dim': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 1\part 1\simple_conv.cpp(217): warning C4101: 'dimension2': unreferenced local variable
   Part 1.vcxproj -> C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 1\Debug\Part 1.exe

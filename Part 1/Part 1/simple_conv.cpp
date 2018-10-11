@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define PROGRAM_FILE "simple_conv.cl"
-#define KERNEL_FUNC "simple_conv"
+#define KERNEL_FUNC_1 "simple_conv"
+#define KERNEL_FUNC_2 "smart_blur"
 
 #define INPUT_FILE "lena.bmp"
 #define OUTPUT_FILE_1 "output_naive.bmp"
@@ -199,7 +200,7 @@ int main(int argc, char **argv) {
    cl_context context;
    cl_command_queue queue;
    cl_program program;
-   cl_kernel kernel;
+   cl_kernel kernel1, kernel2;
    cl_int err;
    size_t global_size[2];
 
@@ -213,7 +214,7 @@ int main(int argc, char **argv) {
    size_t origin[3], region[3];
    size_t width, height;
    int w, h;
-   int dimension;
+   int dimension, dimension2;
 
    cout << "Please enter 3, 5 or 7: ";
    cin >> dimension;
@@ -239,7 +240,8 @@ int main(int argc, char **argv) {
 
    /* Build the program and create a kernel */
    program = build_program(context, device, PROGRAM_FILE);
-   kernel = clCreateKernel(program, KERNEL_FUNC, &err);
+   kernel1 = clCreateKernel(program, KERNEL_FUNC_1, &err);
+   kernel2 = clCreateKernel(program, KERNEL_FUNC_2, &err);
    if(err < 0) {
       printf("Couldn't create a kernel: %d", err);
       exit(1);
@@ -262,10 +264,12 @@ int main(int argc, char **argv) {
    };
 
    /* Create kernel arguments */
-   err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_image);
-   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_image1);
-   err |= clSetKernelArg(kernel, 2, sizeof(cl_int), &dimension);
-   err |= clSetKernelArg(kernel, 3, sizeof(cl_int), &output_image2);
+   err = clSetKernelArg(kernel1, 0, sizeof(cl_mem), &input_image);
+   err |= clSetKernelArg(kernel1, 1, sizeof(cl_mem), &output_image1);
+   err |= clSetKernelArg(kernel1, 2, sizeof(cl_int), &dimension);
+   err = clSetKernelArg(kernel2, 0, sizeof(cl_mem), &input_image);
+   err |= clSetKernelArg(kernel2, 1, sizeof(cl_mem), &output_image2);
+   err |= clSetKernelArg(kernel2, 2, sizeof(cl_int), &dimension);
    if(err < 0) {
       printf("Couldn't set a kernel argument");
       exit(1);   
@@ -280,8 +284,10 @@ int main(int argc, char **argv) {
 
    /* Enqueue kernel */
    global_size[0] = width; global_size[1] = height;
-   err = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global_size, 
-         NULL, 0, NULL, NULL);  
+   err = clEnqueueNDRangeKernel(queue, kernel1, 2, NULL, global_size, 
+         NULL, 0, NULL, NULL); 
+   err = clEnqueueNDRangeKernel(queue, kernel2, 2, NULL, global_size,
+	   NULL, 0, NULL, NULL);
    if(err < 0) {
       perror("Couldn't enqueue the kernel");
       exit(1);
@@ -313,7 +319,8 @@ int main(int argc, char **argv) {
    clReleaseMemObject(input_image);
    clReleaseMemObject(output_image1);
    clReleaseMemObject(output_image2);
-   clReleaseKernel(kernel);
+   clReleaseKernel(kernel1);
+   clReleaseKernel(kernel2);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
