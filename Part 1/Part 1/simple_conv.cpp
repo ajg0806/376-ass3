@@ -7,6 +7,7 @@
 #define INPUT_FILE "lena.bmp"
 #define OUTPUT_FILE_1 "output_naive.bmp"
 #define OUTPUT_FILE_2 "output_smart.bmp"
+#define NUM_ROUNDS 100
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -196,129 +197,132 @@ void print_device(cl_device_id device) {
 
 int main(int argc, char **argv) {
 
-   /* Host/device data structures */
-   cl_device_id device;
-   cl_context context;
-   cl_command_queue queue;
-   cl_program program;
-   cl_kernel kernel1, kernel2a, kernel2b;
-   cl_int err;
-   size_t global_size[2];
+	/* Host/device data structures */
+	cl_device_id device;
+	cl_context context;
+	cl_command_queue queue;
+	cl_program program;
+	cl_kernel kernel1, kernel2a, kernel2b;
+	cl_int err;
+	size_t global_size[2];
+	cl_event evnt1, evnt2a, evnt2b;
 
-   /* Image data */
-   unsigned char* inputImage;
-   unsigned char* outputinput;
-   unsigned char* outputImage1;
-   unsigned char* outputImage2;
+	/* Image data */
+	unsigned char* inputImage;
+	unsigned char* outputinput;
+	unsigned char* outputImage1;
+	unsigned char* outputImage2;
 
-   cl_image_format img_format;
-   cl_mem input_image, output_image1, output_input, output_image2, buffer_dim;
-   size_t origin[3], region[3];
-   size_t width, height;
-   int w, h;
-   int dimension, dimension2;
+	cl_image_format img_format;
+	cl_mem input_image, output_image1, output_input, output_image2, buffer_dim;
+	size_t origin[3], region[3];
+	size_t width, height;
+	int w, h;
+	int dimension, dimension2;
 
-   cout << "Please enter 3, 5 or 7: ";
-   cin >> dimension;
-   cin.ignore(100, '\n');
+	cout << "Please enter 3, 5 or 7: ";
+	cin >> dimension;
+	cin.ignore(100, '\n');
 
-   /* Open input file and read image data */
-   inputImage = readRGBImage(INPUT_FILE, &w, &h);
-   width = w;
-   height = h;
-   outputImage1 = (unsigned char*)malloc(sizeof(unsigned char)*w*h*4);
-   outputinput = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
-   outputImage2 = (unsigned char*)malloc(sizeof(unsigned char)*w*h*4);
+	/* Open input file and read image data */
+	inputImage = readRGBImage(INPUT_FILE, &w, &h);
+	width = w;
+	height = h;
+	outputImage1 = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
+	outputinput = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
+	outputImage2 = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
 
-   /* Create a device and context */
-   device = create_device();
+	/* Create a device and context */
+	device = create_device();
 
-   print_device(device);
+	print_device(device);
 
-   context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
-   if(err < 0) {
-      perror("Couldn't create a context");
-      exit(1);
-   }
+	context = clCreateContext(NULL, 1, &device, NULL, NULL, &err);
+	if (err < 0) {
+		perror("Couldn't create a context");
+		exit(1);
+	}
 
-   /* Build the program and create a kernel */
-   program = build_program(context, device, PROGRAM_FILE);
-   kernel1 = clCreateKernel(program, KERNEL_FUNC_1, &err);
-   kernel2a = clCreateKernel(program, KERNEL_FUNC_2a, &err);
-   kernel2b = clCreateKernel(program, KERNEL_FUNC_2b, &err);
-   if(err < 0) {
-      printf("Couldn't create a kernel: %d", err);
-      exit(1);
-   };
+	/* Build the program and create a kernel */
+	program = build_program(context, device, PROGRAM_FILE);
+	kernel1 = clCreateKernel(program, KERNEL_FUNC_1, &err);
+	kernel2a = clCreateKernel(program, KERNEL_FUNC_2a, &err);
+	kernel2b = clCreateKernel(program, KERNEL_FUNC_2b, &err);
+	if (err < 0) {
+		printf("Couldn't create a kernel: %d", err);
+		exit(1);
+	};
 
-   /* Create image object */
-   img_format.image_channel_order = CL_RGBA;
-   img_format.image_channel_data_type = CL_UNORM_INT8;
+	/* Create image object */
+	img_format.image_channel_order = CL_RGBA;
+	img_format.image_channel_data_type = CL_UNORM_INT8;
+	double sum1 = 0, sum2 = 0;
+	for(int i = 0; i < NUM_ROUNDS; i++)
+	{
+	input_image = clCreateImage2D(context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		&img_format, width, height, 0, (void*)inputImage, &err);
+	output_image1 = clCreateImage2D(context,
+		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+	output_input = clCreateImage2D(context,
+		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+	output_image2 = clCreateImage2D(context,
+		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+	if (err < 0) {
+		perror("Couldn't create the image object");
+		exit(1);
+	};
 
-   input_image = clCreateImage2D(context, 
-         CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, 
-         &img_format, width, height, 0, (void*)inputImage, &err);
-   output_image1 = clCreateImage2D(context, 
-         CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
-   output_input = clCreateImage2D(context,
-	   CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
-   output_image2 = clCreateImage2D(context,
-	   CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
-   if(err < 0) {
-      perror("Couldn't create the image object");
-      exit(1);
-   };
+	/* Create kernel arguments */
+	err = clSetKernelArg(kernel1, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(kernel1, 1, sizeof(cl_mem), &output_image1);
+	err |= clSetKernelArg(kernel1, 2, sizeof(cl_int), &dimension);
+	err = clSetKernelArg(kernel2a, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(kernel2a, 1, sizeof(cl_mem), &output_input);
+	err |= clSetKernelArg(kernel2a, 2, sizeof(cl_int), &dimension);
+	err |= clSetKernelArg(kernel2b, 1, sizeof(cl_mem), &output_image2);
+	err |= clSetKernelArg(kernel2b, 2, sizeof(cl_int), &dimension);
+	if (err < 0) {
+		printf("Couldn't set a kernel argument");
+		exit(1);
+	};
 
-   /* Create kernel arguments */
-   err = clSetKernelArg(kernel1, 0, sizeof(cl_mem), &input_image);
-   err |= clSetKernelArg(kernel1, 1, sizeof(cl_mem), &output_image1);
-   err |= clSetKernelArg(kernel1, 2, sizeof(cl_int), &dimension);
-   err = clSetKernelArg(kernel2a, 0, sizeof(cl_mem), &input_image);
-   err |= clSetKernelArg(kernel2a, 1, sizeof(cl_mem), &output_input );
-   err |= clSetKernelArg(kernel2a, 2, sizeof(cl_int), &dimension);
-   err |= clSetKernelArg(kernel2b, 1, sizeof(cl_mem), &output_image2);
-   err |= clSetKernelArg(kernel2b, 2, sizeof(cl_int), &dimension);
-   if(err < 0) {
-      printf("Couldn't set a kernel argument");
-      exit(1);   
-   }; 
+	/* Create a command queue */
+	queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
+	if (err < 0) {
+		perror("Couldn't create a command queue");
+		exit(1);
+	};
 
-   /* Create a command queue */
-   queue = clCreateCommandQueue(context, device, 0, &err);
-   if(err < 0) {
-      perror("Couldn't create a command queue");
-      exit(1);   
-   };
+	/* Enqueue kernel */
+	global_size[0] = width; global_size[1] = height;
+	err = clEnqueueNDRangeKernel(queue, kernel1, 2, NULL, global_size,
+		NULL, 0, NULL, &evnt1);
+	err = clEnqueueNDRangeKernel(queue, kernel2a, 2, NULL, global_size,
+		NULL, 0, NULL, &evnt2a);
+	if (err < 0) {
+		perror("Couldn't enqueue the kernel");
+		exit(1);
+	}
 
-   /* Enqueue kernel */
-   global_size[0] = width; global_size[1] = height;
-   err = clEnqueueNDRangeKernel(queue, kernel1, 2, NULL, global_size, 
-         NULL, 0, NULL, NULL); 
-   err = clEnqueueNDRangeKernel(queue, kernel2a, 2, NULL, global_size,
-	   NULL, 0, NULL, NULL);
-   if(err < 0) {
-      perror("Couldn't enqueue the kernel");
-      exit(1);
-   }
+	/* Read the image object */
+	origin[0] = 0; origin[1] = 0; origin[2] = 0;
+	region[0] = width; region[1] = height; region[2] = 1;
+	err = clEnqueueReadImage(queue, output_image1, CL_TRUE, origin,
+		region, 0, 0, (void*)outputImage1, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't read from the image object");
+		exit(1);
+	}
 
-   /* Read the image object */
-   origin[0] = 0; origin[1] = 0; origin[2] = 0;
-   region[0] = width; region[1] = height; region[2] = 1;
-   err = clEnqueueReadImage(queue, output_image1, CL_TRUE, origin, 
-         region, 0, 0, (void*)outputImage1, 0, NULL, NULL);
-   if(err < 0) {
-      perror("Couldn't read from the image object");
-      exit(1);   
-   }
-
-   origin[0] = 0; origin[1] = 0; origin[2] = 0;
-   region[0] = width; region[1] = height; region[2] = 1;
-   err = clEnqueueReadImage(queue, output_input, CL_TRUE, origin,
-	   region, 0, 0, (void*)outputinput, 0, NULL, NULL);
-	   if (err < 0) {
-		   perror("Couldn't read from the image object");
-		   exit(1);
-	   }
+	origin[0] = 0; origin[1] = 0; origin[2] = 0;
+	region[0] = width; region[1] = height; region[2] = 1;
+	err = clEnqueueReadImage(queue, output_input, CL_TRUE, origin,
+		region, 0, 0, (void*)outputinput, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't read from the image object");
+		exit(1);
+	}
 
 
 	output_input = clCreateImage2D(context,
@@ -332,7 +336,7 @@ int main(int argc, char **argv) {
 	};
 
 	err = clEnqueueNDRangeKernel(queue, kernel2b, 2, NULL, global_size,
-		NULL, 0, NULL, NULL);
+		NULL, 0, NULL, &evnt2b);
 	if (err < 0) {
 		perror("Couldn't enqueue the kernel");
 		exit(1);
@@ -347,25 +351,60 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+	clWaitForEvents(1, &evnt1);
+	clWaitForEvents(1, &evnt2a);
+	clWaitForEvents(1, &evnt2b);
+
+	clFinish(queue);
 
 
+	cl_ulong time_start_1, time_start_2a, time_start_2b;
+	cl_ulong time_end_1, time_end_2a, time_end_2b;
+
+	clGetEventProfilingInfo(evnt1, CL_PROFILING_COMMAND_START, sizeof(time_start_1), &time_start_1, NULL);
+	clGetEventProfilingInfo(evnt2a, CL_PROFILING_COMMAND_START, sizeof(time_start_2a), &time_start_2a, NULL);
+	clGetEventProfilingInfo(evnt2b, CL_PROFILING_COMMAND_START, sizeof(time_start_2b), &time_start_2b, NULL);
+
+
+	clGetEventProfilingInfo(evnt1, CL_PROFILING_COMMAND_END, sizeof(time_end_1), &time_end_1, NULL);
+	clGetEventProfilingInfo(evnt2a, CL_PROFILING_COMMAND_END, sizeof(time_end_2a), &time_end_2a, NULL);
+	clGetEventProfilingInfo(evnt2b, CL_PROFILING_COMMAND_END, sizeof(time_end_2b), &time_end_2b, NULL);
+
+
+	double nanoSeconds_1 = time_end_1 - time_start_1;
+	double nanoSeconds_2a = time_end_2a - time_start_2a;
+	double nanoSeconds_2b = time_end_2b - time_start_2b;
+
+
+	sum1 += nanoSeconds_1;
+	sum2 += nanoSeconds_2a;
+	sum2 += nanoSeconds_2b;
+}
 
    /* Create output BMP file and write data */
    storeRGBImage(outputImage1, OUTPUT_FILE_1, h, w, INPUT_FILE);
    storeRGBImage(outputImage2, OUTPUT_FILE_2, h, w, INPUT_FILE);
 
-   printf("Done.");
+   printf("\nDone.\n\n");
+
+
+   cout << "Tested " << NUM_ROUNDS << " times:" << endl;
+   printf("\tAverage naive Execution time is: %0.3f milliseconds \n", (sum1/NUM_ROUNDS) / 1000000.0);
+   printf("\tAverage two pass Execution time is: %0.3f milliseconds \n", (sum2/NUM_ROUNDS) / 1000000.0);
    getchar();
 
    /* Deallocate resources */
    free(inputImage);
    free(outputImage1);
+   free(outputinput);
    free(outputImage2);
    clReleaseMemObject(input_image);
    clReleaseMemObject(output_image1);
+   clReleaseMemObject(output_image2);
    clReleaseMemObject(output_input);
    clReleaseKernel(kernel1);
    clReleaseKernel(kernel2a);
+   clReleaseKernel(kernel2b);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
