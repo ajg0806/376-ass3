@@ -25,9 +25,6 @@
   <ItemGroup>
     <ClInclude Include="bmpfuncs.h" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="simple_image.cl" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{0210274A-69D5-4CDB-9B45-E90D1B6530CF}</ProjectGuid>

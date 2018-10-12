@@ -27,9 +27,4 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="simple_image.cl">
-      <Filter>Source Files</Filter>
-    </None>
-  </ItemGroup>
 </Project>

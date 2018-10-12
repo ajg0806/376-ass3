@@ -1,13 +1,12 @@
 #define _CRT_SECURE_NO_WARNINGS
-//#define PROGRAM_FILE "simple_image.cl"
-//#define KERNEL_FUNC "simple_image"
-
 #define INPUT_FILE "lena.bmp"
 #define OUTPUT_FILE "output.bmp"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "bmpfuncs.h"
 #include <iostream>
 
