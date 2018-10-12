@@ -197,14 +197,12 @@ int main(int argc, char **argv) {
    }
 
    /* Create output BMP file and write data */
-   storeRGBImage(outputImage, OUTPUT_FILE, h, w, INPUT_FILE);
+   //storeRGBImage(outputImage, OUTPUT_FILE, h, w, INPUT_FILE);
 
 
   
-   cout << avg_lum(inputImage, w*h) << endl;
+   cout << "Average luminance (calculated sequentially): " << avg_lum(inputImage, w*h) << endl;
 
-
-   printf("Done.");
    getchar();
 
    /* Deallocate resources */

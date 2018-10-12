@@ -225,7 +225,7 @@ int main(int argc, char **argv) {
    width = w;
    height = h;
    outputImage1 = (unsigned char*)malloc(sizeof(unsigned char)*w*h*4);
-   outputImage2 = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
+   outputImage2 = (unsigned char*)malloc(sizeof(unsigned char)*w*h*4);
 
    /* Create a device and context */
    device = create_device();
@@ -298,12 +298,19 @@ int main(int argc, char **argv) {
    region[0] = width; region[1] = height; region[2] = 1;
    err = clEnqueueReadImage(queue, output_image1, CL_TRUE, origin, 
          region, 0, 0, (void*)outputImage1, 0, NULL, NULL);
-   err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
-	   region, 0, 0, (void*)outputImage2, 0, NULL, NULL);
    if(err < 0) {
       perror("Couldn't read from the image object");
       exit(1);   
    }
+
+   origin[0] = 0; origin[1] = 0; origin[2] = 0;
+   region[0] = width; region[1] = height; region[2] = 1;
+   err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
+	   region, 0, 0, (void*)outputImage2, 0, NULL, NULL);
+	   if (err < 0) {
+		   perror("Couldn't read from the image object");
+		   exit(1);
+	   }
 
    /* Create output BMP file and write data */
    storeRGBImage(outputImage1, OUTPUT_FILE_1, h, w, INPUT_FILE);

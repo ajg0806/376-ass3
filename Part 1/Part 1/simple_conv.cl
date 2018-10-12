@@ -96,7 +96,7 @@ __kernel void smart_blur(read_only image2d_t src_image,
       /* Iterate over the rows */
    for(int i = start; i <= end; i++) {
 	  coord.y =  row + i;
-	  coord.x = column;
+	  coord.x = column + end;
 
 	  	/* Read value pixel from the image */ 		
 		 pixel = read_imagef(src_image, sampler, coord);
@@ -114,7 +114,7 @@ __kernel void smart_blur(read_only image2d_t src_image,
       /* Iterate over the columns */
 	  for(int j = start; j <= end; j++) {
          coord.x = column + j;
-		 coord.y = row;
+		 coord.y = row + start;
 		 /* Read value pixel from the image */ 		
 		 pixel = read_imagef(src_image, sampler, coord);
 		 /* Acculumate weighted sum */
