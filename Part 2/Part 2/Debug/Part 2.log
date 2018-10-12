@@ -1,2 +1,7 @@
 ﻿  simple_RGB_image.cpp
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\simple_rgb_image.cpp(37): warning C4101: 'region': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\simple_rgb_image.cpp(37): warning C4101: 'origin': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\simple_rgb_image.cpp(35): warning C4101: 'img_format': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\simple_rgb_image.cpp(36): warning C4101: 'output_image': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\simple_rgb_image.cpp(36): warning C4101: 'input_image': unreferenced local variable
   Part 2.vcxproj -> C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 2\Debug\Part 2.exe
