@@ -10,7 +10,6 @@
 #include <string.h>
 #include "bmpfuncs.h"
 #include <iostream>
-using namespace std;
 
 #ifdef MAC
 #include <OpenCL/cl.h>
@@ -98,8 +97,8 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 
 double avg_lum(unsigned char* image, int size) {
 	double avg = 0;
-	for (int i = 0; i < size*4; i+=4) {
-		avg += ((image[i+0]*0.299)+(image[i+1] * 0.587)+(image[i+2] * 0.114));
+	for (int i = 0; i < size * 4; i += 4) {
+		avg += ((image[i + 0] * 0.299) + (image[i + 1] * 0.587) + (image[i + 2] * 0.114));
 	}
 	avg /= size;
 	return avg;
@@ -199,10 +198,10 @@ int main(int argc, char **argv) {
    /* Create output BMP file and write data */
    //storeRGBImage(outputImage, OUTPUT_FILE, h, w, INPUT_FILE);
 
+   std::cout << avg_lum(inputImage, w*h) << std::endl;
 
-  
-   cout << "Average luminance (calculated sequentially): " << avg_lum(inputImage, w*h) << endl;
 
+   printf("Done.");
    getchar();
 
    /* Deallocate resources */
