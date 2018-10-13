@@ -1,7 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define INPUT_FILE "lena.bmp"
 #define OUTPUT_FILE "output.bmp"
-#define PROGRAM_FILE "reduction_complete.cl"
+#define PROGRAM_FILE "average_luminance.cl"
 
 #define ARRAY_SIZE 131072
 #define KERNEL_1 "reduction_vector"

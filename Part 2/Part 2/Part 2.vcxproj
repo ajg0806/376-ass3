@@ -26,7 +26,7 @@
     <ClInclude Include="bmpfuncs.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="reduction_complete.cl" />
+    <None Include="average_luminance.cl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

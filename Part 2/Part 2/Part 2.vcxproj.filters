@@ -28,7 +28,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="reduction_complete.cl">
+    <None Include="average_luminance.cl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
