@@ -137,25 +137,23 @@ int main(int argc, char **argv) {
    cl_program program;
    cl_kernel vector_kernel, complete_kernel;
    cl_command_queue queue;
-   cl_event start_event, end_event;
-   cl_int i, err;
-   size_t local_size, global_size;
+   cl_int err;
+   size_t loc_size, glob_size;
 
    /* Data and buffers */
    float *data = new float[w*h];
-   float sum, actual_sum;
+   float sum;
    cl_mem data_buffer, sum_buffer;
-   cl_ulong time_start, time_end, total_time;
 
    /* Initialize data */
-   for (i = 0; i < (w*h*4); i+=4) {
+   for (int i = 0; i < (w*h*4); i+=4) {
 	   data[i/4] = 1.0f*((inputImage[i + 0] * 0.299) + (inputImage[i + 1] * 0.587) + (inputImage[i + 2] * 0.114));
    }
 
    /* Create device and determine local size */
    device = create_device();
    err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
-	   sizeof(local_size), &local_size, NULL);
+	   sizeof(loc_size), &loc_size, NULL);
    if (err < 0) {
 	   perror("Couldn't obtain device information");
 	   exit(1);
@@ -199,11 +197,11 @@ int main(int argc, char **argv) {
 
    /* Set arguments for vector kernel */
    err = clSetKernelArg(vector_kernel, 0, sizeof(cl_mem), &data_buffer);
-   err |= clSetKernelArg(vector_kernel, 1, local_size * 4 * sizeof(float), NULL);
+   err |= clSetKernelArg(vector_kernel, 1, loc_size * 4 * sizeof(float), NULL);
 
    /* Set arguments for complete kernel */
    err = clSetKernelArg(complete_kernel, 0, sizeof(cl_mem), &data_buffer);
-   err |= clSetKernelArg(complete_kernel, 1, local_size * 4 * sizeof(float), NULL);
+   err |= clSetKernelArg(complete_kernel, 1, loc_size * 4 * sizeof(float), NULL);
    err |= clSetKernelArg(complete_kernel, 2, sizeof(cl_mem), &sum_buffer);
    if (err < 0) {
 	   perror("Couldn't create a kernel argument");
@@ -211,35 +209,27 @@ int main(int argc, char **argv) {
    }
 
    /* Enqueue kernels */
-   global_size = (w*h)/ 4;
-   err = clEnqueueNDRangeKernel(queue, vector_kernel, 1, NULL, &global_size,
-	   &local_size, 0, NULL, &start_event);
+   glob_size = (w*h)/ 4;
+   err = clEnqueueNDRangeKernel(queue, vector_kernel, 1, NULL, &glob_size,
+	   &loc_size, 0, NULL, NULL);
    if (err < 0) {
 	   perror("Couldn't enqueue the kernel");
 	   exit(1);
    }
 
    /* Perform successive stages of the reduction */
-   while (global_size / local_size > local_size) {
-	   global_size = global_size / local_size;
-	   err = clEnqueueNDRangeKernel(queue, vector_kernel, 1, NULL, &global_size,
-		   &local_size, 0, NULL, NULL);
+   while (glob_size / loc_size > loc_size) {
+	   glob_size = glob_size / loc_size;
+	   err = clEnqueueNDRangeKernel(queue, vector_kernel, 1, NULL, &glob_size,
+		   &loc_size, 0, NULL, NULL);
 	   if (err < 0) {
 		   perror("Couldn't enqueue the kernel");
 		   exit(1);
 	   }
    }
-   global_size = global_size / local_size;
-   err = clEnqueueNDRangeKernel(queue, complete_kernel, 1, NULL, &global_size,
-	   NULL, 0, NULL, &end_event);
-
-   /* Finish processing the queue and get profiling information */
-   clFinish(queue);
-   clGetEventProfilingInfo(start_event, CL_PROFILING_COMMAND_START,
-	   sizeof(time_start), &time_start, NULL);
-   clGetEventProfilingInfo(end_event, CL_PROFILING_COMMAND_END,
-	   sizeof(time_end), &time_end, NULL);
-   total_time = time_end - time_start;
+   glob_size = glob_size / loc_size;
+   err = clEnqueueNDRangeKernel(queue, complete_kernel, 1, NULL, &glob_size,
+	   NULL, 0, NULL, NULL);
 
    /* Read the result */
    err = clEnqueueReadBuffer(queue, sum_buffer, CL_TRUE, 0,
@@ -254,8 +244,6 @@ int main(int argc, char **argv) {
    getchar();
 
    /* Deallocate resources */
-   clReleaseEvent(start_event);
-   clReleaseEvent(end_event);
    clReleaseMemObject(sum_buffer);
    clReleaseMemObject(data_buffer);
    clReleaseKernel(vector_kernel);

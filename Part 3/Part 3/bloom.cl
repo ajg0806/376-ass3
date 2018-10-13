@@ -132,3 +132,29 @@ __kernel void reduction_complete(__global float4* data,
              partial_sums[0].s2 + partial_sums[0].s3;
    }
 }
+
+bool test_lum(float4 pixel, float thres){
+	float lum = 1.0f*((pixel.s0 * 0.299)+(pixel.s1 * 0.587)+(pixel.s2 * 0.114));
+
+	if(thres > lum)
+		return false;
+	
+	return true;
+}
+
+__kernel void output_pass_threshold(	read_only image2d_t src_image,
+							write_only image2d_t dst_image, float thres) {
+
+   /* Get pixel coordinate */
+   int2 coord = (int2)(get_global_id(0), get_global_id(1));
+
+   /* Read pixel value */
+   float4 pixel = read_imagef(src_image, sampler, coord);
+
+   /* Write new pixel value to output */
+   thres = thres*0.005f;
+  if(!test_lum(pixel, thres))
+	pixel = pixel * 0;
+ 
+   write_imagef(dst_image, coord, pixel);
+}
