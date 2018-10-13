@@ -217,7 +217,6 @@ int main(int argc, char **argv) {
 
 
 	/* Create kernel arguments */
-	err = clSetKernelArg(kernel4a, 0, sizeof(cl_mem), &input_image);
 	err |= clSetKernelArg(kernel4a, 1, sizeof(cl_mem), &output_input);
 	err |= clSetKernelArg(kernel4a, 2, sizeof(cl_int), &dimension);
 	err |= clSetKernelArg(kernel4b, 1, sizeof(cl_mem), &output_image);
@@ -244,14 +243,10 @@ int main(int argc, char **argv) {
 	glob_size = (w*h) / 4;
 	err = clEnqueueNDRangeKernel(queue, vector_kernel, 1, NULL, &glob_size,
 		&loc_size, 0, NULL, NULL);
-	global_size[0] = width; global_size[1] = height;
-	err = clEnqueueNDRangeKernel(queue, kernel4a, 2, NULL, global_size,
-		NULL, 0, NULL, NULL);
 	if (err < 0) {
 		perror("Couldn't enqueue the kernel");
 		exit(1);
 	}
-
 
 	   /* Perform successive stages of the reduction */
    while (glob_size / loc_size > loc_size) {
@@ -291,15 +286,42 @@ int main(int argc, char **argv) {
 	err = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global_size,
 		NULL, 0, NULL, NULL);
 
+
+	/* Read the image object */
+	origin[0] = 0; origin[1] = 0; origin[2] = 0;
+	region[0] = width; region[1] = height; region[2] = 1;
+	err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
+		region, 0, 0, (void*)outputImage2, 0, NULL, NULL);
+
+
+
+	input_image = clCreateImage2D(context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		&img_format, width, height, 0, (void*)outputImage2, &err);
+
+
+
+
+	err = clSetKernelArg(kernel4a, 0, sizeof(cl_mem), &input_image);
+	if (err < 0) {
+		printf("Couldn't set a kernel argument");
+		exit(1);
+	};
+
+	global_size[0] = width; global_size[1] = height;
+	err = clEnqueueNDRangeKernel(queue, kernel4a, 2, NULL, global_size,
+		NULL, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't enqueue the kernel");
+		exit(1);
+	}
+
+
+
+
+
    /* Wait for key press before exiting */
    std::cout << "Average luminance (found using parrellel reduction): " << sum/(h*w) << std::endl;
-  
-
-   /* Read the image object */
-   origin[0] = 0; origin[1] = 0; origin[2] = 0;
-   region[0] = width; region[1] = height; region[2] = 1;
-   err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
-	   region, 0, 0, (void*)outputImage2, 0, NULL, NULL);
 
 	/* Read the image object */
 	origin[0] = 0; origin[1] = 0; origin[2] = 0;
