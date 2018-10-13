@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="simple_RGB_image.cpp">
+    <ClCompile Include="bmpfuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bmpfuncs.cpp">
+    <ClCompile Include="average_luminance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -26,5 +26,10 @@
     <ClInclude Include="bmpfuncs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="reduction_complete.cl">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
