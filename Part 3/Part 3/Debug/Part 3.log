@@ -1,2 +1,5 @@
 ﻿  bloom.cpp
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 3\part 3\bloom.cpp : fatal error C1041: cannot open program database 'C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 3\Part 3\Debug\vc141.idb'; if multiple CL.EXE write to the same .PDB file, please use /FS
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 3\part 3\bloom.cpp(152): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  bmpfuncs.cpp
+  Generating Code...
+  Part 3.vcxproj -> C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 3\Debug\Part 3.exe

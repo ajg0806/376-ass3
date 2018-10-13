@@ -57,7 +57,7 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 	int err;
 
 	/* Read program file and place content into buffer */
-	program_handle = fopen(filename, "r");
+	program_handle = fopen(filename, "rb");
 	if (program_handle == NULL) {
 		perror("Couldn't find the program file");
 		exit(1);

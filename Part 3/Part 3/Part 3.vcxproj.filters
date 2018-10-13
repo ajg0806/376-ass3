@@ -15,10 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bmpfuncs.cpp">
+    <None Include="bloom.cl">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="bloom.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bloom.cpp">
+    <ClCompile Include="bmpfuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -26,10 +31,5 @@
     <ClInclude Include="bmpfuncs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="bloom.cl">
-      <Filter>Source Files</Filter>
-    </None>
   </ItemGroup>
 </Project>
