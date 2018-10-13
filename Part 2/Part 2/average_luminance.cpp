@@ -3,7 +3,6 @@
 #define OUTPUT_FILE "output.bmp"
 #define PROGRAM_FILE "average_luminance.cl"
 
-#define ARRAY_SIZE 131072
 #define KERNEL_1 "reduction_vector"
 #define KERNEL_2 "reduction_complete"
 

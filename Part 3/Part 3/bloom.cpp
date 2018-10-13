@@ -1,14 +1,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define PROGRAM_FILE "bloom.cl"
-#define KERNEL_FUNC_2a "smart_blur_verticle"
-#define KERNEL_FUNC_2b "smart_blur_horizontal"
-
+#define KERNEL_1 "reduction_vector"
+#define KERNEL_2 "reduction_complete"
+#define KERNEL_FUNC_4a "smart_blur_verticle"
+#define KERNEL_FUNC_4b "smart_blur_horizontal"
 #define INPUT_FILE "lena.bmp"
 #define OUTPUT_FILE "output.bmp"
 
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "bmpfuncs.h"
 #include <iostream>
 
@@ -103,7 +106,7 @@ int main(int argc, char **argv) {
 	cl_context context;
 	cl_command_queue queue;
 	cl_program program;
-	cl_kernel kernel1, kernel2a, kernel2b;
+	cl_kernel kernel1, kernel4a, kernel4b;
 	cl_int err;
 	size_t global_size[2];
 
@@ -146,8 +149,8 @@ int main(int argc, char **argv) {
 
 	/* Build the program and create a kernel */
 	program = build_program(context, device, PROGRAM_FILE);
-	kernel2a = clCreateKernel(program, KERNEL_FUNC_2a, &err);
-	kernel2b = clCreateKernel(program, KERNEL_FUNC_2b, &err);
+	kernel4a = clCreateKernel(program, KERNEL_FUNC_4a, &err);
+	kernel4b = clCreateKernel(program, KERNEL_FUNC_4b, &err);
 	if (err < 0) {
 		printf("Couldn't create a kernel: %d", err);
 		exit(1);
@@ -170,11 +173,11 @@ int main(int argc, char **argv) {
 	};
 
 	/* Create kernel arguments */
-	err = clSetKernelArg(kernel2a, 0, sizeof(cl_mem), &input_image);
-	err |= clSetKernelArg(kernel2a, 1, sizeof(cl_mem), &output_input);
-	err |= clSetKernelArg(kernel2a, 2, sizeof(cl_int), &dimension);
-	err |= clSetKernelArg(kernel2b, 1, sizeof(cl_mem), &output_image);
-	err |= clSetKernelArg(kernel2b, 2, sizeof(cl_int), &dimension);
+	err = clSetKernelArg(kernel4a, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(kernel4a, 1, sizeof(cl_mem), &output_input);
+	err |= clSetKernelArg(kernel4a, 2, sizeof(cl_int), &dimension);
+	err |= clSetKernelArg(kernel4b, 1, sizeof(cl_mem), &output_image);
+	err |= clSetKernelArg(kernel4b, 2, sizeof(cl_int), &dimension);
 	if (err < 0) {
 		printf("Couldn't set a kernel argument");
 		exit(1);
@@ -189,7 +192,7 @@ int main(int argc, char **argv) {
 
 	/* Enqueue kernel */
 	global_size[0] = width; global_size[1] = height;
-	err = clEnqueueNDRangeKernel(queue, kernel2a, 2, NULL, global_size,
+	err = clEnqueueNDRangeKernel(queue, kernel4a, 2, NULL, global_size,
 		NULL, 0, NULL, NULL);
 	if (err < 0) {
 		perror("Couldn't enqueue the kernel");
@@ -211,13 +214,13 @@ int main(int argc, char **argv) {
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 		&img_format, width, height, 0, (void*)outputinput, &err);
 
-	err = clSetKernelArg(kernel2b, 0, sizeof(cl_mem), &output_input);
+	err = clSetKernelArg(kernel4b, 0, sizeof(cl_mem), &output_input);
 	if (err < 0) {
 		printf("Couldn't set a kernel argument");
 		exit(1);
 	};
 
-	err = clEnqueueNDRangeKernel(queue, kernel2b, 2, NULL, global_size,
+	err = clEnqueueNDRangeKernel(queue, kernel4b, 2, NULL, global_size,
 		NULL, 0, NULL, NULL);
 	if (err < 0) {
 		perror("Couldn't enqueue the kernel");
@@ -245,8 +248,8 @@ int main(int argc, char **argv) {
    clReleaseMemObject(input_image);
    clReleaseMemObject(output_image);
    clReleaseMemObject(output_input);
-   clReleaseKernel(kernel2a);
-   clReleaseKernel(kernel2b);
+   clReleaseKernel(kernel4a);
+   clReleaseKernel(kernel4b);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);

@@ -1,9 +1,9 @@
 ﻿  average_luminance.cpp
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(153): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(119): warning C4101: 'region': unreferenced local variable
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(119): warning C4101: 'origin': unreferenced local variable
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(117): warning C4101: 'img_format': unreferenced local variable
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(118): warning C4101: 'output_image': unreferenced local variable
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(118): warning C4101: 'input_image': unreferenced local variable
-c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(147): warning C4101: 'actual_sum': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(152): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(118): warning C4101: 'region': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(118): warning C4101: 'origin': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(116): warning C4101: 'img_format': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(117): warning C4101: 'output_image': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(117): warning C4101: 'input_image': unreferenced local variable
+c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(146): warning C4101: 'actual_sum': unreferenced local variable
   Part 2.vcxproj -> C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 2\Debug\Part 2.exe
