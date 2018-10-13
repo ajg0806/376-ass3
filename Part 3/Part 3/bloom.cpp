@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
 
 	/* Image data */
 	unsigned char* inputImage;
-	unsigned char* outputinput;
-	unsigned char* outputImage, *outputImage2;
+	//unsigned char* outputinput;
+	unsigned char* outputImage;
 
 	cl_image_format img_format;
 	cl_mem input_image, output_image, output_input, output_image2;
@@ -139,9 +139,8 @@ int main(int argc, char **argv) {
 	inputImage = readRGBImage(INPUT_FILE, &w, &h);
 	width = w;
 	height = h;
-	outputinput = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
+	//outputinput = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
 	outputImage = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
-	outputImage2 = (unsigned char*)malloc(sizeof(unsigned char)*w*h * 4);
 
 	/* Data and buffers */
 	float *data = new float[w*h];
@@ -291,13 +290,13 @@ int main(int argc, char **argv) {
 	origin[0] = 0; origin[1] = 0; origin[2] = 0;
 	region[0] = width; region[1] = height; region[2] = 1;
 	err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
-		region, 0, 0, (void*)outputImage2, 0, NULL, NULL);
+		region, 0, 0, (void*)outputImage, 0, NULL, NULL);
 
 
 
 	input_image = clCreateImage2D(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		&img_format, width, height, 0, (void*)outputImage2, &err);
+		&img_format, width, height, 0, (void*)outputImage, &err);
 
 
 
@@ -327,7 +326,7 @@ int main(int argc, char **argv) {
 	origin[0] = 0; origin[1] = 0; origin[2] = 0;
 	region[0] = width; region[1] = height; region[2] = 1;
 	err = clEnqueueReadImage(queue, output_input, CL_TRUE, origin,
-		region, 0, 0, (void*)outputinput, 0, NULL, NULL);
+		region, 0, 0, (void*)outputImage, 0, NULL, NULL);
 	if (err < 0) {
 		perror("Couldn't read from the image object");
 		exit(1);
@@ -335,7 +334,7 @@ int main(int argc, char **argv) {
 
 	output_input = clCreateImage2D(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		&img_format, width, height, 0, (void*)outputinput, &err);
+		&img_format, width, height, 0, (void*)outputImage, &err);
 	err = clSetKernelArg(kernel4b, 0, sizeof(cl_mem), &output_input);
 	if (err < 0) {
 		printf("Couldn't set a kernel argument");
@@ -359,15 +358,13 @@ int main(int argc, char **argv) {
 
 
 	/* Create output BMP file and write data */
-	storeRGBImage(outputImage2, OUTPUT_FILE2, h, w, INPUT_FILE);
+	storeRGBImage(outputImage, OUTPUT_FILE, h, w, INPUT_FILE);
    /* Create output BMP file and write data */
-   storeRGBImage(outputImage, OUTPUT_FILE, h, w, INPUT_FILE);
 
    getchar();
 
    /* Deallocate resources */
    free(inputImage);
-   free(outputinput);
    free(outputImage);
    clReleaseMemObject(sum_buffer);
    clReleaseMemObject(data_buffer);
