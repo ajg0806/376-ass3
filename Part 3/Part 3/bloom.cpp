@@ -3,8 +3,9 @@
 #define KERNEL_1 "reduction_vector"
 #define KERNEL_2 "reduction_complete"
 #define KERNEL_3 "output_pass_threshold"
-#define KERNEL_FUNC_4a "smart_blur_verticle"
-#define KERNEL_FUNC_4b "smart_blur_horizontal"
+#define KERNEL_4a "smart_blur_verticle"
+#define KERNEL_4b "smart_blur_horizontal"
+#define KERNEL_5 "final_bloom_step"
 #define INPUT_FILE "lena.bmp"
 #define OUTPUT_FILE "output.bmp"
 #define OUTPUT_FILE2 "output2.bmp"
@@ -108,17 +109,16 @@ int main(int argc, char **argv) {
 	cl_context context;
 	cl_command_queue queue;
 	cl_program program;
-	cl_kernel kernel, vector_kernel, complete_kernel, kernel4a, kernel4b;
+	cl_kernel kernel, vector_kernel, complete_kernel, kernel4a, kernel4b, kernel5;
 	cl_int err;
 	size_t global_size[2], loc_size, glob_size;
 
 	/* Image data */
 	unsigned char* inputImage;
-	//unsigned char* outputinput;
 	unsigned char* outputImage;
 
 	cl_image_format img_format;
-	cl_mem input_image, output_image, output_input, output_image2;
+	cl_mem input_image, input_image2, output_image;
 	size_t origin[3], region[3];
 	size_t width, height;
 	int w, h;
@@ -166,8 +166,9 @@ int main(int argc, char **argv) {
 	vector_kernel = clCreateKernel(program, KERNEL_1, &err);
 	complete_kernel = clCreateKernel(program, KERNEL_2, &err);
 	kernel = clCreateKernel(program, KERNEL_3, &err);
-	kernel4a = clCreateKernel(program, KERNEL_FUNC_4a, &err);
-	kernel4b = clCreateKernel(program, KERNEL_FUNC_4b, &err);
+	kernel4a = clCreateKernel(program, KERNEL_4a, &err);
+	kernel4b = clCreateKernel(program, KERNEL_4b, &err);
+	kernel5 = clCreateKernel(program, KERNEL_5, &err);
 	if (err < 0) {
 		printf("Couldn't create a kernel: %d", err);
 		exit(1);
@@ -184,11 +185,7 @@ int main(int argc, char **argv) {
 	input_image = clCreateImage2D(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 		&img_format, width, height, 0, (void*)inputImage, &err);
-	output_input = clCreateImage2D(context,
-		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
 	output_image = clCreateImage2D(context,
-		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
-	output_image2 = clCreateImage2D(context,
 		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
 	if (err < 0) {
 		perror("Couldn't create the image object");
@@ -207,7 +204,7 @@ int main(int argc, char **argv) {
 	err |= clSetKernelArg(complete_kernel, 2, sizeof(cl_mem), &sum_buffer);
 
 	err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_image);
-	err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_image2);
+	err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_image);
 
 
 
@@ -216,14 +213,8 @@ int main(int argc, char **argv) {
 
 
 	/* Create kernel arguments */
-	err |= clSetKernelArg(kernel4a, 1, sizeof(cl_mem), &output_input);
-	err |= clSetKernelArg(kernel4a, 2, sizeof(cl_int), &dimension);
-	err |= clSetKernelArg(kernel4b, 1, sizeof(cl_mem), &output_image);
-	err |= clSetKernelArg(kernel4b, 2, sizeof(cl_int), &dimension);
-	if (err < 0) {
-		printf("Couldn't set a kernel argument");
-		exit(1);
-	};
+
+
 
 	/* Create a command queue */
 	queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
@@ -281,32 +272,34 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 
+
+
+	//Enque pass kernel, read from pass kernel
 	global_size[0] = width; global_size[1] = height;
 	err = clEnqueueNDRangeKernel(queue, kernel, 2, NULL, global_size,
 		NULL, 0, NULL, NULL);
-
-
-	/* Read the image object */
 	origin[0] = 0; origin[1] = 0; origin[2] = 0;
 	region[0] = width; region[1] = height; region[2] = 1;
-	err = clEnqueueReadImage(queue, output_image2, CL_TRUE, origin,
+	err = clEnqueueReadImage(queue, output_image, CL_TRUE, origin,
 		region, 0, 0, (void*)outputImage, 0, NULL, NULL);
 
 
-
+	//Reset input_image buffer to have the output from the pass kernel
 	input_image = clCreateImage2D(context,
 		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 		&img_format, width, height, 0, (void*)outputImage, &err);
-
-
-
+	output_image = clCreateImage2D(context,
+		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+	//Pass it to the first pass blur kernel
 
 	err = clSetKernelArg(kernel4a, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(kernel4a, 1, sizeof(cl_mem), &output_image);
+	err |= clSetKernelArg(kernel4a, 2, sizeof(cl_int), &dimension);
 	if (err < 0) {
 		printf("Couldn't set a kernel argument");
 		exit(1);
 	};
-
+	//Enque first pass blur kernel 
 	global_size[0] = width; global_size[1] = height;
 	err = clEnqueueNDRangeKernel(queue, kernel4a, 2, NULL, global_size,
 		NULL, 0, NULL, NULL);
@@ -314,39 +307,7 @@ int main(int argc, char **argv) {
 		perror("Couldn't enqueue the kernel");
 		exit(1);
 	}
-
-
-
-
-
-	/* Wait for key press before exiting */
-	std::cout << "Average luminance (found using parrellel reduction): " << sum / (h*w) << std::endl;
-
-	/* Read the image object */
-	origin[0] = 0; origin[1] = 0; origin[2] = 0;
-	region[0] = width; region[1] = height; region[2] = 1;
-	err = clEnqueueReadImage(queue, output_input, CL_TRUE, origin,
-		region, 0, 0, (void*)outputImage, 0, NULL, NULL);
-	if (err < 0) {
-		perror("Couldn't read from the image object");
-		exit(1);
-	}
-
-	output_input = clCreateImage2D(context,
-		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-		&img_format, width, height, 0, (void*)outputImage, &err);
-	err = clSetKernelArg(kernel4b, 0, sizeof(cl_mem), &output_input);
-	if (err < 0) {
-		printf("Couldn't set a kernel argument");
-		exit(1);
-	};
-	err = clEnqueueNDRangeKernel(queue, kernel4b, 2, NULL, global_size,
-		NULL, 0, NULL, NULL);
-	if (err < 0) {
-		perror("Couldn't enqueue the kernel");
-		exit(1);
-	}
-
+	//Read from first pass blur kernel
 	origin[0] = 0; origin[1] = 0; origin[2] = 0;
 	region[0] = width; region[1] = height; region[2] = 1;
 	err = clEnqueueReadImage(queue, output_image, CL_TRUE, origin,
@@ -355,6 +316,75 @@ int main(int argc, char **argv) {
 		perror("Couldn't read from the image object");
 		exit(1);
 	}
+
+
+	input_image = clCreateImage2D(context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		&img_format, width, height, 0, (void*)outputImage, &err);
+	output_image = clCreateImage2D(context,
+		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+	err = clSetKernelArg(kernel4b, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(kernel4b, 1, sizeof(cl_mem), &output_image);
+	err |= clSetKernelArg(kernel4b, 2, sizeof(cl_int), &dimension);
+	if (err < 0) {
+		printf("Couldn't set a kernel argument");
+		exit(1);
+	};
+	
+	err = clEnqueueNDRangeKernel(queue, kernel4b, 2, NULL, global_size,
+		NULL, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't enqueue the kernel");
+		exit(1);
+	}
+	//Read in from the second pass blur kernel
+	origin[0] = 0; origin[1] = 0; origin[2] = 0;
+	region[0] = width; region[1] = height; region[2] = 1;
+	err = clEnqueueReadImage(queue, output_image, CL_TRUE, origin,
+		region, 0, 0, (void*)outputImage, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't read from the image object");
+		exit(1);
+	}
+
+
+
+
+
+	/****************************************/
+	input_image = clCreateImage2D(context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		&img_format, width, height, 0, (void*)inputImage, &err);
+	input_image2 = clCreateImage2D(context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		&img_format, width, height, 0, (void*)outputImage, &err);
+	output_image = clCreateImage2D(context,
+		CL_MEM_WRITE_ONLY, &img_format, width, height, 0, NULL, &err);
+	err = clSetKernelArg(kernel5, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(kernel5, 1, sizeof(cl_mem), &input_image2);
+	err |= clSetKernelArg(kernel5, 2, sizeof(cl_int), &output_image);
+	if (err < 0) {
+		printf("Couldn't set a kernel argument");
+		exit(1);
+	};
+
+	err = clEnqueueNDRangeKernel(queue, kernel5, 2, NULL, global_size,
+		NULL, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't enqueue the kernel");
+		exit(1);
+	}
+	//Read in from the second pass blur kernel
+	origin[0] = 0; origin[1] = 0; origin[2] = 0;
+	region[0] = width; region[1] = height; region[2] = 1;
+	err = clEnqueueReadImage(queue, output_image, CL_TRUE, origin,
+		region, 0, 0, (void*)outputImage, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't read from the image object");
+		exit(1);
+	}
+	/************************************************/
+
 
 
 	/* Create output BMP file and write data */
@@ -368,13 +398,15 @@ int main(int argc, char **argv) {
 	free(outputImage);
 	clReleaseMemObject(sum_buffer);
 	clReleaseMemObject(data_buffer);
-	clReleaseKernel(vector_kernel);
-	clReleaseKernel(complete_kernel);
+
 	clReleaseMemObject(input_image);
 	clReleaseMemObject(output_image);
-	clReleaseMemObject(output_input);
+	clReleaseKernel(vector_kernel);
+	clReleaseKernel(complete_kernel);
+	clReleaseKernel(kernel);
 	clReleaseKernel(kernel4a);
 	clReleaseKernel(kernel4b);
+	clReleaseKernel(kernel5);
 	clReleaseCommandQueue(queue);
 	clReleaseProgram(program);
 	clReleaseContext(context);

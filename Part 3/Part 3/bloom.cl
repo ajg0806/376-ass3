@@ -158,3 +158,21 @@ __kernel void output_pass_threshold(	read_only image2d_t src_image,
  
    write_imagef(dst_image, coord, pixel);
 }
+
+__kernel void final_bloom_step(	read_only image2d_t src_image1, read_only image2d_t src_image2,
+							write_only image2d_t dst_image) {
+   /* Get pixel coordinate */
+   int2 coord = (int2)(get_global_id(0), get_global_id(1));
+
+
+
+
+   /* Read pixel value */
+   float4 pixel1 = read_imagef(src_image1, sampler, coord);
+   float4 pixel2 = read_imagef(src_image2, sampler, coord);
+
+   float4 pixel = pixel1 + pixel2;
+
+   /* Write new pixel value to output */
+   write_imagef(dst_image, coord, pixel);
+}
