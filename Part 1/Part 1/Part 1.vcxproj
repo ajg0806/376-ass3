@@ -122,13 +122,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bmpfuncs.cpp" />
-    <ClCompile Include="simple_conv.cpp" />
+    <ClCompile Include="gaussian_blur.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmpfuncs.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="simple_conv.cl" />
+    <None Include="gaussian_blur.cl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

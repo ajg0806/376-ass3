@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="simple_conv.cpp">
+    <ClCompile Include="bmpfuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bmpfuncs.cpp">
+    <ClCompile Include="gaussian_blur.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -28,7 +28,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="simple_conv.cl">
+    <None Include="gaussian_blur.cl">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

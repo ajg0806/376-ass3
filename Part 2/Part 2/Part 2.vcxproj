@@ -20,13 +20,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="bmpfuncs.cpp" />
-    <ClCompile Include="simple_RGB_image.cpp" />
+    <ClCompile Include="average_luminance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bmpfuncs.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="simple_image.cl" />
+    <None Include="average_luminance.cl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
