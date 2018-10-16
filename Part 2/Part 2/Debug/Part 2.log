@@ -5,4 +5,5 @@ c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part
 c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(116): warning C4101: 'img_format': unreferenced local variable
 c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(117): warning C4101: 'output_image': unreferenced local variable
 c:\users\grabs\google drive\2018\spring\csci376\assignments\376-ass3\part 2\part 2\average_luminance.cpp(117): warning C4101: 'input_image': unreferenced local variable
+  LINK : C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 2\Debug\Part 2.exe not found or not built by the last incremental link; performing full link
   Part 2.vcxproj -> C:\Users\grabs\Google Drive\2018\Spring\CSCI376\Assignments\376-ass3\Part 2\Debug\Part 2.exe
