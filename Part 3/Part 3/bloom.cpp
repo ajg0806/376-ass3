@@ -1,5 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
 #define PROGRAM_FILE "bloom.cl"
+#define KERNEL_T "image_to_data"
 #define KERNEL_1 "reduction_vector"
 #define KERNEL_2 "reduction_complete"
 #define KERNEL_3 "output_pass_threshold"
@@ -109,7 +110,7 @@ int main(int argc, char **argv) {
 	cl_context context;
 	cl_command_queue queue;
 	cl_program program;
-	cl_kernel kernel, vector_kernel, complete_kernel, kernel4a, kernel4b, kernel5;
+	cl_kernel kernel, vector_kernel, complete_kernel, kernel4a, kernel4b, kernel5, transform_kernel;
 	cl_int err;
 	size_t global_size[2], loc_size, glob_size;
 
@@ -118,7 +119,7 @@ int main(int argc, char **argv) {
 	unsigned char* outputImage;
 
 	cl_image_format img_format;
-	cl_mem input_image, input_image2, output_image;
+	cl_mem input_image, input_image2, output_image, image_data;
 	size_t origin[3], region[3];
 	size_t width, height;
 	int w, h;
@@ -147,11 +148,6 @@ int main(int argc, char **argv) {
 	float sum;
 	cl_mem data_buffer, sum_buffer;
 
-	/* Initialize data */
-	for (int i = 0; i < (w*h * 4); i += 4) {
-		data[i / 4] = 1.0f*((inputImage[i + 0] * 0.299) + (inputImage[i + 1] * 0.587) + (inputImage[i + 2] * 0.114));
-	}
-
 	/* Create a device and context */
 	device = create_device();
 
@@ -165,6 +161,7 @@ int main(int argc, char **argv) {
 	program = build_program(context, device, PROGRAM_FILE);
 	vector_kernel = clCreateKernel(program, KERNEL_1, &err);
 	complete_kernel = clCreateKernel(program, KERNEL_2, &err);
+	transform_kernel = clCreateKernel(program, KERNEL_T, &err);
 	kernel = clCreateKernel(program, KERNEL_3, &err);
 	kernel4a = clCreateKernel(program, KERNEL_4a, &err);
 	kernel4b = clCreateKernel(program, KERNEL_4b, &err);
@@ -178,8 +175,6 @@ int main(int argc, char **argv) {
 	img_format.image_channel_order = CL_RGBA;
 	img_format.image_channel_data_type = CL_UNORM_INT8;
 
-	data_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-		CL_MEM_USE_HOST_PTR, w * h * sizeof(float), data, &err);
 	sum_buffer = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
 		sizeof(float), NULL, &err);
 	input_image = clCreateImage2D(context,
@@ -195,6 +190,49 @@ int main(int argc, char **argv) {
 	err = clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
 		sizeof(loc_size), &loc_size, NULL);
 
+	/* Create a command queue */
+	queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
+	if (err < 0) {
+		perror("Couldn't create a command queue");
+		exit(1);
+	};
+
+	input_image = clCreateImage2D(context,
+		CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+		&img_format, width, height, 0, (void*)inputImage, &err);
+	image_data = clCreateBuffer(context, CL_MEM_WRITE_ONLY,
+		sizeof(float)*w*h, NULL, &err);
+	if (err < 0) {
+		perror("Couldn't create a buffer");
+		getchar();
+		exit(1);
+	};
+
+	err = clSetKernelArg(transform_kernel, 0, sizeof(cl_mem), &input_image);
+	err |= clSetKernelArg(transform_kernel, 1, sizeof(cl_mem), &image_data);
+	err |= clSetKernelArg(transform_kernel, 2, sizeof(cl_int), &h);
+	if (err < 0) {
+		perror("Couldn't create a kernel argument");
+		getchar();
+		exit(1);
+	}
+
+	global_size[0] = width; global_size[1] = height;
+	err = clEnqueueNDRangeKernel(queue, transform_kernel, 2, NULL, global_size,
+		NULL, 0, NULL, NULL);
+
+	/* Read the result */
+	err = clEnqueueReadBuffer(queue, image_data, CL_TRUE, 0,
+		w * h * sizeof(float), data, 0, NULL, NULL);
+	if (err < 0) {
+		perror("Couldn't read the buffer");
+		getchar();
+		exit(1);
+	}
+
+	data_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
+		CL_MEM_USE_HOST_PTR, w * h * sizeof(float), data, &err);
+
 	/* Set arguments for vector kernel */
 	err = clSetKernelArg(vector_kernel, 0, sizeof(cl_mem), &data_buffer);
 	err |= clSetKernelArg(vector_kernel, 1, loc_size * 4 * sizeof(float), NULL);
@@ -207,29 +245,7 @@ int main(int argc, char **argv) {
 	err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &output_image);
 
 
-
-
-
-
-
-	/* Create kernel arguments */
-
-
-
-	/* Create a command queue */
-	queue = clCreateCommandQueue(context, device, CL_QUEUE_PROFILING_ENABLE, &err);
-	if (err < 0) {
-		perror("Couldn't create a command queue");
-		exit(1);
-	};
-
-
-
-
-
-
 	/* Enqueue kernel */
-
 	glob_size = (w*h) / 4;
 	err = clEnqueueNDRangeKernel(queue, vector_kernel, 1, NULL, &glob_size,
 		&loc_size, 0, NULL, NULL);
@@ -398,12 +414,13 @@ int main(int argc, char **argv) {
 	free(outputImage);
 	clReleaseMemObject(sum_buffer);
 	clReleaseMemObject(data_buffer);
-
+	clReleaseMemObject(image_data);
 	clReleaseMemObject(input_image);
 	clReleaseMemObject(output_image);
 	clReleaseKernel(vector_kernel);
 	clReleaseKernel(complete_kernel);
 	clReleaseKernel(kernel);
+	clReleaseKernel(transform_kernel);
 	clReleaseKernel(kernel4a);
 	clReleaseKernel(kernel4b);
 	clReleaseKernel(kernel5);
