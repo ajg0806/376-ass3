@@ -3,8 +3,9 @@
 #define OUTPUT_FILE "output.bmp"
 #define PROGRAM_FILE "average_luminance.cl"
 
-#define KERNEL_1 "reduction_vector"
-#define KERNEL_2 "reduction_complete"
+#define KERNEL_1 "image_to_data"
+#define KERNEL_2a "reduction_vector"
+#define KERNEL_2b "reduction_complete"
 
 #include <math.h>
 #include <stdio.h>
@@ -188,8 +189,9 @@ int main(int argc, char **argv) {
    };
 
    /* Create kernels */
-   vector_kernel = clCreateKernel(program, KERNEL_1, &err);
-   complete_kernel = clCreateKernel(program, KERNEL_2, &err);
+   //transform_kernel = clCreateKernel(program, KERNEL_1, &err);
+   vector_kernel = clCreateKernel(program, KERNEL_2a, &err);
+   complete_kernel = clCreateKernel(program, KERNEL_2b, &err);
    if (err < 0) {
 	   perror("Couldn't create a kernel");
 	   exit(1);
