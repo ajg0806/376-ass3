@@ -7,7 +7,7 @@
 #define KERNEL_4a "smart_blur_verticle"
 #define KERNEL_4b "smart_blur_horizontal"
 #define KERNEL_5 "final_bloom_step"
-#define INPUT_FILE "lena.bmp"
+#define INPUT_FILE "bunnycity2.bmp"
 #define OUTPUT_FILE "output.bmp"
 #define OUTPUT_FILE2 "output2.bmp"
 

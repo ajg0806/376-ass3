@@ -187,11 +187,6 @@ int main(int argc, char **argv) {
 	   exit(1);
    };
 
-
-
-
-   
-
    input_image = clCreateImage2D(context,
 	   CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
 	   &img_format, width, height, 0, (void*)inputImage, &err);
@@ -224,11 +219,6 @@ int main(int argc, char **argv) {
 	   getchar();
 	   exit(1);
    }
-  
-
-
-
-
 
    data_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
 	   CL_MEM_USE_HOST_PTR, w * h * sizeof(float), data, &err);
@@ -238,7 +228,6 @@ int main(int argc, char **argv) {
 	   perror("Couldn't create a buffer");
 	   exit(1);
    };
-
 
    /* Set arguments for vector kernel */
    err = clSetKernelArg(vector_kernel, 0, sizeof(cl_mem), &data_buffer);
