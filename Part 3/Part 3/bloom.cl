@@ -6,6 +6,19 @@ __constant float SmartFilter2[5] = {0.06136, 0.24477, 0.38774, 0.24477, 0.06136}
 __constant float SmartFilter3[7] = {0.00598, 0.060626, 0.241843, 0.383103, 0.241843, 0.060626, 0.00598};
 
 
+__kernel void image_to_data( read_only image2d_t src_image,
+							__global float* data, int height) {
+     /* Get pixel coordinate */
+   int2 coord = (int2)(get_global_id(0), get_global_id(1));
+
+   /* Read pixel value */
+  float4 pixel = read_imagef(src_image, sampler, coord);
+
+  int index = (get_global_id(0) * height) + get_global_id(1);
+
+  data[index] = 255.0f*((pixel.s0 * 0.299)+(pixel.s1 * 0.587)+(pixel.s2 * 0.114));
+}
+
 __kernel void smart_blur_verticle(read_only image2d_t src_image,
 					write_only image2d_t dst_image, int dim) {
 
@@ -152,7 +165,7 @@ __kernel void output_pass_threshold(	read_only image2d_t src_image,
    float4 pixel = read_imagef(src_image, sampler, coord);
 
    /* Write new pixel value to output */
-   thres = thres*0.005f;
+   thres = thres/255.0f;
   if(!test_lum(pixel, thres))
 	pixel = pixel * 0;
  
